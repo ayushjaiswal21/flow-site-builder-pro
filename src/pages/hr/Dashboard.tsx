@@ -1,8 +1,7 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { TestCard } from "@/components/tests/TestCard";
+import { TestCard, TestStatus } from "@/components/tests/TestCard";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
@@ -16,14 +15,13 @@ import {
   Plus
 } from "lucide-react";
 
-// Mock data for tests
 const mockTests = [
   {
     id: "1",
     title: "Programming Skills Assessment",
     description: "Evaluate coding skills and problem-solving abilities",
     category: "Programming",
-    status: "active",
+    status: "active" as TestStatus,
     createdDate: "2025-03-21",
     respondents: 24,
     avgScore: 76,
@@ -33,7 +31,7 @@ const mockTests = [
     title: "Customer Care Periodic Test",
     description: "Regular assessment for customer service skills",
     category: "Customer Service",
-    status: "setup",
+    status: "setup" as TestStatus,
     createdDate: "2025-03-21",
     respondents: 0,
   },
@@ -42,7 +40,7 @@ const mockTests = [
     title: "Product Knowledge Test for Sales",
     description: "Test on product features and sales techniques",
     category: "Sales",
-    status: "setup",
+    status: "setup" as TestStatus,
     createdDate: "2025-03-21",
     respondents: 0,
   },
@@ -51,7 +49,7 @@ const mockTests = [
     title: "Data Analysis Proficiency",
     description: "Assessment for data analysis and visualization skills",
     category: "Data Science",
-    status: "completed",
+    status: "completed" as TestStatus,
     createdDate: "2025-03-10",
     respondents: 15,
     avgScore: 68,
@@ -96,8 +94,8 @@ const Dashboard = () => {
             <TabsTrigger value="tests">My Tests</TabsTrigger>
             <TabsTrigger value="candidates">Candidates</TabsTrigger>
           </TabsList>
+          
           <TabsContent value="overview" className="space-y-6">
-            {/* Summary cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="dashboard-card flex items-center space-x-4">
                 <div className="bg-primary/10 p-3 rounded-full">
@@ -140,7 +138,6 @@ const Dashboard = () => {
               </div>
             </div>
             
-            {/* Charts and stats */}
             <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
               <div className="dashboard-card">
                 <div className="flex justify-between items-center mb-4">
@@ -173,7 +170,6 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* Recent tests */}
             <div>
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-medium">Recent Tests</h3>

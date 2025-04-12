@@ -217,7 +217,7 @@ const CreateTest = () => {
             <Card>
               <CardContent className="pt-6 space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="title" required>Test Title</Label>
+                  <Label htmlFor="title">Test Title <span className="text-red-500">*</span></Label>
                   <Input 
                     id="title"
                     name="title"
