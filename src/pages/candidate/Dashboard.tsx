@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { TestCard } from "@/components/tests/TestCard";
@@ -18,7 +17,7 @@ const mockTests = [
     title: "Programming Skills Assessment",
     description: "Evaluate coding skills and problem-solving abilities",
     category: "Programming",
-    status: "active",
+    status: "active" as const,
     createdDate: "2025-03-21",
   },
   {
@@ -26,7 +25,7 @@ const mockTests = [
     title: "Customer Care Periodic Test",
     description: "Regular assessment for customer service skills",
     category: "Customer Service",
-    status: "active",
+    status: "active" as const,
     createdDate: "2025-03-21",
   },
 ];
@@ -38,7 +37,7 @@ const mockCompletedTests = [
     title: "Product Knowledge Test for Sales",
     description: "Test on product features and sales techniques",
     category: "Sales",
-    status: "completed",
+    status: "completed" as const,
     createdDate: "2025-03-15",
     respondents: 1,
     avgScore: 82,
@@ -48,7 +47,7 @@ const mockCompletedTests = [
     title: "Example Reasoning Test",
     description: "Logical reasoning and problem-solving assessment",
     category: "Cognitive",
-    status: "completed",
+    status: "completed" as const,
     createdDate: "2025-03-10",
     respondents: 1,
     avgScore: 50,
