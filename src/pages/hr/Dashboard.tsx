@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
@@ -14,6 +15,7 @@ import {
   FileText,
   Plus
 } from "lucide-react";
+import { UserSettings } from "@/components/user/UserSettings";
 
 const mockTests = [
   {
@@ -79,13 +81,16 @@ const Dashboard = () => {
       <div className="space-y-8">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold tracking-tight">HR Dashboard</h1>
-          <Button 
-            onClick={() => navigate("/hr/create-test")}
-            className="bg-primary hover:bg-primary/90"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Create new test
-          </Button>
+          <div className="flex items-center gap-2">
+            <UserSettings />
+            <Button 
+              onClick={() => navigate("/hr/create-test")}
+              className="bg-primary hover:bg-primary/90"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Create new test
+            </Button>
+          </div>
         </div>
 
         <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab}>

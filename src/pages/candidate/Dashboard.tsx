@@ -10,6 +10,7 @@ import {
   Award, 
   CalendarDays 
 } from "lucide-react";
+import { UserSettings } from "@/components/user/UserSettings";
 
 // Mock data for tests with properly typed status
 const mockTests = [
@@ -77,12 +78,15 @@ const CandidateDashboard = () => {
       <div className="space-y-8">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold tracking-tight">Candidate Dashboard</h1>
-          <Button 
-            onClick={() => navigate("/candidate/start-test")}
-            className="bg-primary hover:bg-primary/90"
-          >
-            Find available tests
-          </Button>
+          <div className="flex items-center gap-2">
+            <UserSettings />
+            <Button 
+              onClick={() => navigate("/candidate/start-test")}
+              className="bg-primary hover:bg-primary/90"
+            >
+              Find available tests
+            </Button>
+          </div>
         </div>
 
         {/* Summary cards */}
