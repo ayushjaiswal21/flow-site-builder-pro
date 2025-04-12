@@ -1,10 +1,10 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Navbar } from "./Navbar";
 import { Footer } from "./Footer";
 import { Sidebar } from "./Sidebar";
 import { useAuth } from "@/contexts/AuthContext";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 interface DashboardLayoutProps {
@@ -21,20 +21,24 @@ export function DashboardLayout({
   showSidebar = true,
 }: DashboardLayoutProps) {
   const { isAuthenticated, user } = useAuth();
+  const navigate = useNavigate();
 
-  // Check if user is authenticated if required
+  useEffect(() => {
+    // If the user is not authenticated and authentication is required
+    if (requireAuth && !isAuthenticated) {
+      navigate("/login");
+      return;
+    }
+
+    // If role-specific access is required and the user's role doesn't match
+    if (requireAuth && isAuthenticated && allowedRole && user?.role !== allowedRole) {
+      navigate(user?.role === "hr" ? "/hr/dashboard" : "/candidate/dashboard");
+    }
+  }, [requireAuth, isAuthenticated, allowedRole, user, navigate]);
+
+  // Early return for immediate redirect
   if (requireAuth && !isAuthenticated) {
-    return <Navigate to="/login" />;
-  }
-
-  // Check if user has correct role if specified
-  if (
-    requireAuth &&
-    isAuthenticated &&
-    allowedRole &&
-    user?.role !== allowedRole
-  ) {
-    return <Navigate to={`/${user?.role}/dashboard`} />;
+    return null;
   }
 
   return (

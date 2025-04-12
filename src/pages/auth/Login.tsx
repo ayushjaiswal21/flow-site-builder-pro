@@ -47,7 +47,12 @@ const Login = () => {
         title: "Login successful",
         description: `Welcome to the ${role === "hr" ? "HR" : "Candidate"} dashboard`,
       });
-      navigate(role === "hr" ? "/hr/dashboard" : "/candidate/dashboard");
+
+      // Use setTimeout to ensure that the user state is updated before redirecting
+      setTimeout(() => {
+        const redirectPath = role === "hr" ? "/hr/dashboard" : "/candidate/dashboard";
+        navigate(redirectPath);
+      }, 600); // Set to a bit more than the login delay (500ms)
     } catch (err) {
       setError("Invalid login credentials");
     }
