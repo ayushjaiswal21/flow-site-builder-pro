@@ -12,7 +12,7 @@ import {
   ChevronRight 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { UserRole } from "@/contexts/AuthContext";
+import { UserRole } from "@/contexts/AuthContext";
 
 interface SidebarProps {
   userRole: UserRole;

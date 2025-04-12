@@ -1,6 +1,7 @@
+
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
-type UserRole = 'hr' | 'candidate' | null;
+export type UserRole = 'hr' | 'candidate' | null;
 
 export interface User {
   id: string;
@@ -14,7 +15,8 @@ interface AuthContextProps {
   user: User | null;
   setUser: (user: User | null) => void;
   isAuthenticated: boolean;
-  login: (user: User) => void;
+  loading: boolean;
+  login: (userData: User) => void;
   logout: () => void;
 }
 
@@ -22,6 +24,7 @@ const AuthContext = createContext<AuthContextProps>({
   user: null,
   setUser: () => {},
   isAuthenticated: false,
+  loading: false,
   login: () => {},
   logout: () => {},
 });
@@ -36,6 +39,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const storedUser = localStorage.getItem('user');
     return storedUser ? JSON.parse(storedUser) : null;
   });
+  const [loading, setLoading] = useState(false);
   const isAuthenticated = !!user;
 
   useEffect(() => {
@@ -48,7 +52,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [user]);
 
   const login = (userData: User) => {
-    setUser(userData);
+    setLoading(true);
+    // Simulate network delay
+    setTimeout(() => {
+      setUser(userData);
+      setLoading(false);
+    }, 500);
   };
 
   const logout = () => {
@@ -56,7 +65,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ user, setUser, isAuthenticated, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

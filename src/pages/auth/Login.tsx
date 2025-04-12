@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth, User } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,7 +32,17 @@ const Login = () => {
     }
     
     try {
-      await login(email, password, role);
+      // Create mock user for demo purposes
+      const mockUser: User = {
+        id: `user-${Math.random().toString(36).substring(2, 9)}`,
+        name: email.split('@')[0],
+        email: email,
+        role: role,
+        avatar: null
+      };
+      
+      login(mockUser);
+      
       toast({
         title: "Login successful",
         description: `Welcome to the ${role === "hr" ? "HR" : "Candidate"} dashboard`,
