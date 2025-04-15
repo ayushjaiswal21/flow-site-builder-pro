@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -60,7 +60,8 @@ const mockTest = {
 
 const TakeTest = () => {
   const { toast } = useToast();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const navigate = useNavigate();
   
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, any>>({});
@@ -71,6 +72,19 @@ const TakeTest = () => {
   const [showSubmitDialog, setShowSubmitDialog] = useState(false);
   const [showFaceScanInfo, setShowFaceScanInfo] = useState(true);
   const [violations, setViolations] = useState<string[]>([]);
+  const [authChecked, setAuthChecked] = useState(false);
+  
+  useEffect(() => {
+    const checkAuth = () => {
+      setAuthChecked(true);
+      if (!isAuthenticated) {
+        navigate('/login', { replace: true });
+      }
+    };
+    
+    const timer = setTimeout(checkAuth, 500);
+    return () => clearTimeout(timer);
+  }, [isAuthenticated, navigate]);
   
   const currentQuestion = mockTest.questions[currentQuestionIndex];
   const progress = ((currentQuestionIndex + 1) / mockTest.questions.length) * 100;
@@ -159,7 +173,6 @@ const TakeTest = () => {
   
   const handleSubmitTest = () => {
     setIsTestCompleted(true);
-    // In a real app, we would send the answers to the backend here
     toast({
       title: "Test submitted",
       description: "Your answers have been recorded.",
@@ -176,6 +189,10 @@ const TakeTest = () => {
       description: `A potential violation has been detected: ${type}`,
     });
   };
+
+  if (!authChecked) {
+    return null;
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" />;
@@ -397,7 +414,7 @@ const TakeTest = () => {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction 
-              onClick={() => window.location.href = "/candidate/dashboard"}
+              onClick={() => navigate('/candidate/dashboard')}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Exit Test

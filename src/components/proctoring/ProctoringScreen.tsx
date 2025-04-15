@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,41 +27,60 @@ export function ProctoringScreen({ onViolation, testTimeMinutes = 30 }: Proctori
   const [timeRemaining, setTimeRemaining] = useState(testTimeMinutes * 60); // in seconds
   const [focusEvents, setFocusEvents] = useState(0);
   
-  // Handle camera access
-  const requestCameraAccess = async () => {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  
+  // Handle camera access with error handling
+  const requestCameraAccess = useCallback(async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      // If there's already a stream, clean it up first
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+      
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          width: { ideal: 320 },
+          height: { ideal: 240 },
+          facingMode: "user"
+        } 
+      });
+      
+      streamRef.current = stream;
       setCameraStream(stream);
       setCameraActive(true);
       setCameraPermission(true);
+      
+      // Connect stream to video element
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+      
       return true;
     } catch (error) {
       console.error("Error accessing camera:", error);
       setCameraPermission(false);
       return false;
     }
-  };
+  }, []);
   
   // Initialize camera when component mounts
   useEffect(() => {
-    requestCameraAccess();
+    const initCamera = async () => {
+      // Small delay to prevent immediate access which might cause issues
+      setTimeout(() => {
+        requestCameraAccess();
+      }, 1000);
+    };
+    
+    initCamera();
     
     return () => {
-      if (cameraStream) {
-        cameraStream.getTracks().forEach(track => track.stop());
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
       }
     };
-  }, []);
-  
-  // Set up video element when camera stream is available
-  useEffect(() => {
-    if (cameraStream) {
-      const videoElement = document.getElementById('proctor-video') as HTMLVideoElement;
-      if (videoElement) {
-        videoElement.srcObject = cameraStream;
-      }
-    }
-  }, [cameraStream]);
+  }, [requestCameraAccess]);
   
   // Monitor for focus/blur events
   useEffect(() => {
@@ -146,6 +165,7 @@ export function ProctoringScreen({ onViolation, testTimeMinutes = 30 }: Proctori
           <div className="relative bg-black rounded-md aspect-video overflow-hidden">
             {cameraActive ? (
               <video
+                ref={videoRef}
                 id="proctor-video"
                 autoPlay
                 muted
