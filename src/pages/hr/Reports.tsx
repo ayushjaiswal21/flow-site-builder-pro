@@ -1,239 +1,233 @@
 
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
-} from "recharts";
-import { 
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import {
+  Calendar,
+  ChevronDown,
+  ChevronUp,
   Download,
   FileBarChart,
+  Search,
   Users,
-  Calendar
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-// Mock data for the reports
-const testPerformanceData = [
-  { name: "Programming", avgScore: 76, candidates: 15 },
-  { name: "Customer Service", avgScore: 82, candidates: 8 },
-  { name: "Sales", avgScore: 68, candidates: 12 },
-  { name: "Management", avgScore: 74, candidates: 6 },
-  { name: "Analytics", avgScore: 81, candidates: 9 },
+// Sample test data
+const testData = [
+  {
+    id: "1",
+    title: "Programming Skills Assessment",
+    candidates: 45,
+    completed: 38,
+    avgScore: 72.5,
+    passRate: 68,
+    createdAt: "2025-04-01",
+  },
+  {
+    id: "2",
+    title: "Customer Service Training Evaluation",
+    candidates: 32,
+    completed: 30,
+    avgScore: 84.2,
+    passRate: 90,
+    createdAt: "2025-04-05",
+  },
+  {
+    id: "3",
+    title: "Leadership Aptitude Test",
+    candidates: 15,
+    completed: 12,
+    avgScore: 68.7,
+    passRate: 58,
+    createdAt: "2025-04-10",
+  },
+  {
+    id: "4",
+    title: "Sales Techniques Assessment",
+    candidates: 28,
+    completed: 25,
+    avgScore: 76.3,
+    passRate: 72,
+    createdAt: "2025-04-12",
+  },
 ];
-
-const monthlyTestsData = [
-  { name: "Jan", tests: 5, candidates: 12 },
-  { name: "Feb", tests: 8, candidates: 18 },
-  { name: "Mar", tests: 12, candidates: 24 },
-  { name: "Apr", tests: 7, candidates: 16 },
-  { name: "May", tests: 9, candidates: 20 },
-  { name: "Jun", tests: 11, candidates: 22 },
-];
-
-const testCompletionData = [
-  { name: "Completed", value: 68 },
-  { name: "Abandoned", value: 17 },
-  { name: "Expired", value: 15 },
-];
-
-const COLORS = ["#4ade80", "#f87171", "#fbbf24"];
 
 const Reports = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortField, setSortField] = useState("title");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
+  };
+
+  const filteredTests = testData.filter(test =>
+    test.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const sortedTests = [...filteredTests].sort((a: any, b: any) => {
+    if (sortDirection === "asc") {
+      return a[sortField] > b[sortField] ? 1 : -1;
+    } else {
+      return a[sortField] < b[sortField] ? 1 : -1;
+    }
+  });
+
   return (
     <DashboardLayout allowedRole="hr">
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Reports & Analytics</h1>
+            <h1 className="text-2xl font-bold tracking-tight">Test Reports</h1>
             <p className="text-muted-foreground">
-              View performance metrics and download reports
+              View and analyze performance metrics for all your tests
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Select defaultValue="30">
-              <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="Time period" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="7">Last 7 days</SelectItem>
-                <SelectItem value="30">Last 30 days</SelectItem>
-                <SelectItem value="90">Last 3 months</SelectItem>
-                <SelectItem value="365">Last year</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button variant="outline" className="gap-2">
-              <Download size={16} /> Export
-            </Button>
+          <Button variant="outline">
+            <Download className="mr-2 h-4 w-4" />
+            Export All Data
+          </Button>
+        </div>
+
+        <div className="space-y-4">
+          <div className="flex">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search tests..."
+                className="pl-8"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort("title")}
+                  >
+                    <div className="flex items-center gap-1">
+                      Test Name
+                      {sortField === "title" && (
+                        sortDirection === "asc" ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+                      )}
+                    </div>
+                  </TableHead>
+                  <TableHead
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort("candidates")}
+                  >
+                    <div className="flex items-center gap-1">
+                      Candidates
+                      {sortField === "candidates" && (
+                        sortDirection === "asc" ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+                      )}
+                    </div>
+                  </TableHead>
+                  <TableHead
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort("avgScore")}
+                  >
+                    <div className="flex items-center gap-1">
+                      Avg. Score
+                      {sortField === "avgScore" && (
+                        sortDirection === "asc" ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+                      )}
+                    </div>
+                  </TableHead>
+                  <TableHead
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort("passRate")}
+                  >
+                    <div className="flex items-center gap-1">
+                      Pass Rate
+                      {sortField === "passRate" && (
+                        sortDirection === "asc" ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+                      )}
+                    </div>
+                  </TableHead>
+                  <TableHead
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort("createdAt")}
+                  >
+                    <div className="flex items-center gap-1">
+                      Created
+                      {sortField === "createdAt" && (
+                        sortDirection === "asc" ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+                      )}
+                    </div>
+                  </TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sortedTests.map((test) => (
+                  <TableRow key={test.id}>
+                    <TableCell className="font-medium">{test.title}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                        <span>{test.completed}/{test.candidates}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={
+                        test.avgScore >= 80 ? "bg-green-50 text-green-700 border-green-200" :
+                        test.avgScore >= 60 ? "bg-amber-50 text-amber-700 border-amber-200" :
+                        "bg-red-50 text-red-700 border-red-200"
+                      }>
+                        {test.avgScore}%
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={
+                        test.passRate >= 80 ? "bg-green-50 text-green-700 border-green-200" :
+                        test.passRate >= 60 ? "bg-amber-50 text-amber-700 border-amber-200" :
+                        "bg-red-50 text-red-700 border-red-200"
+                      }>
+                        {test.passRate}%
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <span>{test.createdAt}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="sm" asChild>
+                        <Link to={`/hr/test-results/${test.id}`}>
+                          <FileBarChart className="mr-2 h-4 w-4" />
+                          View Report
+                        </Link>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         </div>
-
-        {/* Summary cards */}
-        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Tests Created
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div className="text-2xl font-bold">52</div>
-                <FileBarChart className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                +24% from last period
-              </p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Candidates Assessed
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div className="text-2xl font-bold">183</div>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                +12% from last period
-              </p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Average Completion Rate
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div className="text-2xl font-bold">68%</div>
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                -5% from last period
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Tabs defaultValue="performance" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="performance">Test Performance</TabsTrigger>
-            <TabsTrigger value="trends">Trends</TabsTrigger>
-            <TabsTrigger value="completion">Completion</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="performance" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Average Scores by Test Category</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-2">
-                <div className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={testPerformanceData}
-                      margin={{
-                        top: 5,
-                        right: 30,
-                        left: 20,
-                        bottom: 5,
-                      }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="avgScore" fill="#3b82f6" name="Average Score (%)" />
-                      <Bar dataKey="candidates" fill="#6366f1" name="Candidates" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="trends" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Monthly Tests and Candidates</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-2">
-                <div className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={monthlyTestsData}
-                      margin={{
-                        top: 5,
-                        right: 30,
-                        left: 20,
-                        bottom: 5,
-                      }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="tests" fill="#3b82f6" name="Tests Created" />
-                      <Bar dataKey="candidates" fill="#6366f1" name="Candidates Assessed" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="completion" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Test Completion Status</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[300px] flex justify-center">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={testCompletionData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="value"
-                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      >
-                        {testCompletionData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Legend />
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
       </div>
     </DashboardLayout>
   );
