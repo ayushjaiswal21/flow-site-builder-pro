@@ -29,6 +29,7 @@ export function ProctoringScreen({ onViolation, testTimeMinutes = 30 }: Proctori
   
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const mountedRef = useRef(true);
   
   // Handle camera access with error handling
   const requestCameraAccess = useCallback(async () => {
@@ -46,6 +47,12 @@ export function ProctoringScreen({ onViolation, testTimeMinutes = 30 }: Proctori
         } 
       });
       
+      // Check if component is still mounted before updating state
+      if (!mountedRef.current) {
+        stream.getTracks().forEach(track => track.stop());
+        return false;
+      }
+      
       streamRef.current = stream;
       setCameraStream(stream);
       setCameraActive(true);
@@ -59,23 +66,34 @@ export function ProctoringScreen({ onViolation, testTimeMinutes = 30 }: Proctori
       return true;
     } catch (error) {
       console.error("Error accessing camera:", error);
-      setCameraPermission(false);
+      if (mountedRef.current) {
+        setCameraPermission(false);
+      }
       return false;
     }
   }, []);
   
   // Initialize camera when component mounts
   useEffect(() => {
+    mountedRef.current = true;
+    let cameraInitTimer: number;
+    
     const initCamera = async () => {
-      // Small delay to prevent immediate access which might cause issues
-      setTimeout(() => {
-        requestCameraAccess();
-      }, 1000);
+      // Delay camera initialization to prevent immediate access issues
+      cameraInitTimer = window.setTimeout(() => {
+        requestCameraAccess().catch(err => {
+          console.error("Camera initialization error:", err);
+        });
+      }, 1500); // Increased delay to ensure app is stable
     };
     
     initCamera();
     
     return () => {
+      mountedRef.current = false;
+      clearTimeout(cameraInitTimer);
+      
+      // Clean up camera resources on unmount
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
       }
@@ -85,7 +103,7 @@ export function ProctoringScreen({ onViolation, testTimeMinutes = 30 }: Proctori
   // Monitor for focus/blur events
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.hidden) {
+      if (document.hidden && mountedRef.current) {
         const newViolations = [...violations, "Tab change detected"];
         setViolations(newViolations);
         setFocusEvents(prev => prev + 1);
@@ -102,6 +120,8 @@ export function ProctoringScreen({ onViolation, testTimeMinutes = 30 }: Proctori
   
   // Timer countdown
   useEffect(() => {
+    if (!mountedRef.current) return;
+    
     const timer = setInterval(() => {
       setTimeRemaining(prev => {
         if (prev <= 0) {
@@ -124,6 +144,8 @@ export function ProctoringScreen({ onViolation, testTimeMinutes = 30 }: Proctori
   
   // Simulate random violations for demo purposes
   useEffect(() => {
+    if (!mountedRef.current) return;
+    
     const simulateViolation = () => {
       const violationTypes = [
         "Multiple faces detected",

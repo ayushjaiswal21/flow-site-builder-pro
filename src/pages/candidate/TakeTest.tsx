@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useRef } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -62,6 +63,7 @@ const TakeTest = () => {
   const { toast } = useToast();
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
+  const authCheckedRef = useRef(false);
   
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, any>>({});
@@ -74,17 +76,29 @@ const TakeTest = () => {
   const [violations, setViolations] = useState<string[]>([]);
   const [authChecked, setAuthChecked] = useState(false);
   
+  // Use a more robust way to check authentication
   useEffect(() => {
-    const checkAuth = () => {
-      setAuthChecked(true);
-      if (!isAuthenticated) {
-        navigate('/login', { replace: true });
-      }
-    };
-    
-    const timer = setTimeout(checkAuth, 500);
-    return () => clearTimeout(timer);
-  }, [isAuthenticated, navigate]);
+    // Only check auth once to avoid refreshing state during camera initialization
+    if (!authCheckedRef.current) {
+      const checkAuth = () => {
+        setAuthChecked(true);
+        authCheckedRef.current = true;
+      };
+      
+      // Delay the auth check slightly to ensure context is initialized
+      const timer = setTimeout(checkAuth, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthenticated]);
+  
+  // Handle unauthorized access
+  useEffect(() => {
+    if (authChecked && !isAuthenticated && !showFaceScanInfo) {
+      // Only navigate away if user is definitely not authenticated
+      // and we're past the initial face scan screen
+      navigate('/login', { replace: true });
+    }
+  }, [authChecked, isAuthenticated, navigate, showFaceScanInfo]);
   
   const currentQuestion = mockTest.questions[currentQuestionIndex];
   const progress = ((currentQuestionIndex + 1) / mockTest.questions.length) * 100;
@@ -190,11 +204,8 @@ const TakeTest = () => {
     });
   };
 
-  if (!authChecked) {
-    return null;
-  }
-
-  if (!isAuthenticated) {
+  // Use safe rendering conditions
+  if (authChecked && !isAuthenticated && !showFaceScanInfo) {
     return <Navigate to="/login" />;
   }
   
