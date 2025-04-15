@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { AuthProvider } from '@/contexts/AuthContext';
 import Index from '@/pages/Index';
-import Login from '@/pages/Login';
+import Login from '@/pages/auth/Login';
 import HrDashboard from '@/pages/hr/Dashboard';
 import CandidateDashboard from '@/pages/candidate/Dashboard';
 import NotFound from '@/pages/NotFound';
