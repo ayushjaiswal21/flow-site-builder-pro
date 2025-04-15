@@ -6,7 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { LoaderCircle, Sparkles, RefreshCw } from "lucide-react";
+import { LoaderCircle, Sparkles, RefreshCw, CalendarIcon } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
 
 interface AIQuizGeneratorProps {
   testDetails: {
@@ -14,24 +17,46 @@ interface AIQuizGeneratorProps {
     description: string;
     category: string;
     questionCount: number;
+    dueDate?: Date;
+    timeLimit?: number;
   };
   onQuestionsGenerated: (questions: any[]) => void;
+  onSettingsUpdated?: (settings: {
+    dueDate?: Date;
+    timeLimit?: number;
+  }) => void;
 }
 
-export function AIQuizGenerator({ testDetails, onQuestionsGenerated }: AIQuizGeneratorProps) {
+export function AIQuizGenerator({ 
+  testDetails, 
+  onQuestionsGenerated,
+  onSettingsUpdated
+}: AIQuizGeneratorProps) {
   const [loading, setLoading] = useState(false);
   const [aiConfig, setAIConfig] = useState({
     topic: testDetails.title || "",
     instructions: testDetails.description || "",
     difficulty: "medium",
     questionCount: testDetails.questionCount,
+    dueDate: testDetails.dueDate || undefined,
+    timeLimit: testDetails.timeLimit || 30,
   });
 
-  const handleChange = (field: string, value: string | number) => {
-    setAIConfig(prev => ({
-      ...prev,
+  const handleChange = (field: string, value: string | number | Date | undefined) => {
+    const newConfig = {
+      ...aiConfig,
       [field]: value
-    }));
+    };
+    
+    setAIConfig(newConfig);
+    
+    // Update parent component with deadline and time limit
+    if (onSettingsUpdated && (field === 'dueDate' || field === 'timeLimit')) {
+      onSettingsUpdated({
+        dueDate: newConfig.dueDate,
+        timeLimit: newConfig.timeLimit,
+      });
+    }
   };
 
   const generateQuestions = () => {
@@ -120,6 +145,50 @@ export function AIQuizGenerator({ testDetails, onQuestionsGenerated }: AIQuizGen
             />
             <p className="text-xs text-muted-foreground">
               We recommend between 5-50 questions
+            </p>
+          </div>
+          
+          {/* New time limit field */}
+          <div className="space-y-2">
+            <Label htmlFor="timeLimit">Time Limit (minutes)</Label>
+            <Input 
+              id="timeLimit" 
+              type="number"
+              min={5}
+              max={180}
+              value={aiConfig.timeLimit}
+              onChange={(e) => handleChange("timeLimit", parseInt(e.target.value) || 30)}
+            />
+            <p className="text-xs text-muted-foreground">
+              How long candidates have to complete the test
+            </p>
+          </div>
+          
+          {/* New due date field */}
+          <div className="space-y-2">
+            <Label>Submission Deadline (optional)</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-left font-normal"
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {aiConfig.dueDate ? format(aiConfig.dueDate, "PPP") : <span>Select deadline</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={aiConfig.dueDate}
+                  onSelect={(date) => handleChange("dueDate", date)}
+                  initialFocus
+                  disabled={(date) => date < new Date()}
+                />
+              </PopoverContent>
+            </Popover>
+            <p className="text-xs text-muted-foreground">
+              The date by which candidates must complete the test
             </p>
           </div>
 

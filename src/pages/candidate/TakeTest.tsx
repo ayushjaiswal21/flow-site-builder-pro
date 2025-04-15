@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -20,8 +19,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Timer, AlertTriangle, ArrowLeft, ArrowRight, CheckCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { ProctoringScreen } from "@/components/proctoring/ProctoringScreen";
 
-// Mock test data
 const mockTest = {
   id: "1",
   title: "Programming Skills Assessment",
@@ -71,6 +70,7 @@ const TakeTest = () => {
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [showSubmitDialog, setShowSubmitDialog] = useState(false);
   const [showFaceScanInfo, setShowFaceScanInfo] = useState(true);
+  const [violations, setViolations] = useState<string[]>([]);
   
   const currentQuestion = mockTest.questions[currentQuestionIndex];
   const progress = ((currentQuestionIndex + 1) / mockTest.questions.length) * 100;
@@ -166,12 +166,21 @@ const TakeTest = () => {
     });
   };
 
-  // Redirect if not authenticated
+  const handleViolation = (type: string) => {
+    const newViolations = [...violations, type];
+    setViolations(newViolations);
+    
+    toast({
+      variant: "destructive",
+      title: "Proctoring Alert",
+      description: `A potential violation has been detected: ${type}`,
+    });
+  };
+
   if (!isAuthenticated) {
     return <Navigate to="/login" />;
   }
   
-  // Show completion screen
   if (isTestCompleted) {
     return (
       <div className="min-h-screen bg-secondary flex items-center justify-center p-4">
@@ -205,7 +214,6 @@ const TakeTest = () => {
     );
   }
   
-  // Show environment scan before test
   if (showFaceScanInfo) {
     return (
       <div className="min-h-screen bg-secondary flex items-center justify-center p-4">
@@ -268,7 +276,6 @@ const TakeTest = () => {
   
   return (
     <div className="min-h-screen bg-secondary flex flex-col">
-      {/* Test header */}
       <header className="bg-white border-b py-3 px-4 sticky top-0 z-10">
         <div className="container flex justify-between items-center">
           <div>
@@ -286,12 +293,10 @@ const TakeTest = () => {
         </div>
       </header>
       
-      {/* Test progress */}
       <div className="container py-2">
         <Progress value={progress} />
       </div>
       
-      {/* Question content */}
       <div className="container flex-1 py-4 md:py-8">
         <Card>
           <CardContent className="pt-6">
@@ -348,7 +353,6 @@ const TakeTest = () => {
         </Card>
       </div>
       
-      {/* Test navigation */}
       <footer className="bg-white border-t py-4 sticky bottom-0">
         <div className="container flex justify-between">
           <Button 
@@ -382,7 +386,6 @@ const TakeTest = () => {
         </div>
       </footer>
       
-      {/* Exit confirmation dialog */}
       <AlertDialog open={showExitDialog} onOpenChange={setShowExitDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -403,7 +406,6 @@ const TakeTest = () => {
         </AlertDialogContent>
       </AlertDialog>
       
-      {/* Submit confirmation dialog */}
       <AlertDialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -420,6 +422,13 @@ const TakeTest = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      
+      {isTestStarted && !isTestCompleted && (
+        <ProctoringScreen 
+          onViolation={handleViolation} 
+          testTimeMinutes={mockTest.duration}
+        />
+      )}
     </div>
   );
 };
