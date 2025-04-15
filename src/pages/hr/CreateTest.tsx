@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import {
   ChevronLeft,
@@ -18,14 +19,19 @@ import {
   Plus,
   Trash2,
   Save,
-  SendHorizonal
+  SendHorizonal,
+  Clock,
+  Sparkles,
+  Pencil
 } from "lucide-react";
+import { AIQuizGenerator } from "@/components/quiz/AIQuizGenerator";
 
 const CreateTest = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(0); // Changed to start at 0 for creation method selection
+  const [creationMethod, setCreationMethod] = useState<"manual" | "ai" | null>(null);
   const [testDetails, setTestDetails] = useState({
     title: "",
     description: "",
@@ -34,6 +40,7 @@ const CreateTest = () => {
     passingScore: 70,
     questionCount: 20,
     accessType: "invited",
+    enableProctoring: true, // Added proctoring option
   });
   
   const [questions, setQuestions] = useState<any[]>([]);
@@ -49,6 +56,10 @@ const CreateTest = () => {
   
   const handleSliderChange = (name: string, value: number[]) => {
     setTestDetails(prev => ({ ...prev, [name]: value[0] }));
+  };
+
+  const handleToggleChange = (name: string, value: boolean) => {
+    setTestDetails(prev => ({ ...prev, [name]: value }));
   };
 
   const addQuestion = () => {
@@ -124,6 +135,20 @@ const CreateTest = () => {
   };
   
   const handleNextStep = () => {
+    if (step === 0) {
+      // Validate creation method selection
+      if (!creationMethod) {
+        toast({
+          variant: "destructive",
+          title: "Missing information",
+          description: "Please select a creation method.",
+        });
+        return;
+      }
+      setStep(1);
+      return;
+    }
+    
     if (step === 1) {
       if (!testDetails.title) {
         toast({
@@ -135,7 +160,7 @@ const CreateTest = () => {
       }
     }
     
-    if (step < 3) {
+    if (step < 4) { // Updated for new step count
       setStep(step + 1);
     } else {
       handleSaveTest();
@@ -143,7 +168,7 @@ const CreateTest = () => {
   };
   
   const handlePreviousStep = () => {
-    if (step > 1) {
+    if (step > 0) {
       setStep(step - 1);
     }
   };
@@ -163,6 +188,17 @@ const CreateTest = () => {
     });
   };
 
+  // Add AI-generated questions to our test
+  const handleAddAIQuestions = (aiQuestions: any[]) => {
+    setQuestions(aiQuestions);
+    // Move to the questions step to review
+    setStep(2);
+    toast({
+      title: "Questions generated",
+      description: "AI has generated questions based on your specifications. Please review them.",
+    });
+  };
+
   return (
     <DashboardLayout allowedRole="hr">
       <div className="space-y-8">
@@ -170,7 +206,7 @@ const CreateTest = () => {
           <div className="space-y-1">
             <h1 className="text-2xl font-bold tracking-tight">Create New Test</h1>
             <p className="text-muted-foreground">
-              Design your custom assessment in 3 easy steps
+              Design your custom assessment in {creationMethod === "ai" ? "4" : "3"} easy steps
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -193,24 +229,108 @@ const CreateTest = () => {
         {/* Progress steps */}
         <div className="relative">
           <div className="flex justify-between mb-2">
-            <span className={`text-sm font-medium ${step >= 1 ? "text-primary" : "text-muted-foreground"}`}>
-              Test Details
-            </span>
-            <span className={`text-sm font-medium ${step >= 2 ? "text-primary" : "text-muted-foreground"}`}>
-              Add Questions
-            </span>
-            <span className={`text-sm font-medium ${step >= 3 ? "text-primary" : "text-muted-foreground"}`}>
-              Review & Assign
-            </span>
+            {step === 0 && (
+              <>
+                <span className="text-sm font-medium text-primary">Choose Method</span>
+                <span className="text-sm font-medium text-muted-foreground">Test Details</span>
+                <span className="text-sm font-medium text-muted-foreground">Questions</span>
+                <span className="text-sm font-medium text-muted-foreground">Review & Assign</span>
+              </>
+            )}
+            {step > 0 && (
+              <>
+                <span className={`text-sm font-medium ${step >= 1 ? "text-primary" : "text-muted-foreground"}`}>
+                  Test Details
+                </span>
+                {creationMethod === "ai" && (
+                  <span className={`text-sm font-medium ${step >= 2 ? "text-primary" : "text-muted-foreground"}`}>
+                    AI Generation
+                  </span>
+                )}
+                <span className={`text-sm font-medium ${step >= (creationMethod === "ai" ? 3 : 2) ? "text-primary" : "text-muted-foreground"}`}>
+                  {creationMethod === "ai" ? "Review Questions" : "Add Questions"}
+                </span>
+                <span className={`text-sm font-medium ${step >= (creationMethod === "ai" ? 4 : 3) ? "text-primary" : "text-muted-foreground"}`}>
+                  Review & Assign
+                </span>
+              </>
+            )}
           </div>
           <div className="overflow-hidden rounded-full bg-secondary h-2">
             <div 
               className="h-full bg-primary transition-all"
-              style={{ width: `${(step / 3) * 100}%` }}
+              style={{ width: `${(step / (creationMethod === "ai" ? 4 : 3)) * 100}%` }}
             />
           </div>
         </div>
         
+        {/* Step 0: Choose Creation Method */}
+        {step === 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card 
+              className={`cursor-pointer transition-all hover:border-primary ${creationMethod === "ai" ? "border-primary border-2" : ""}`}
+              onClick={() => setCreationMethod("ai")}
+            >
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Sparkles className="h-5 w-5 mr-2 text-primary" />
+                  AI-Generated Quiz
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground mb-4">
+                  Let AI create quiz questions based on your specifications. Simply provide the topic, difficulty level, and number of questions.
+                </p>
+                <ul className="space-y-2">
+                  <li className="flex items-start">
+                    <span className="text-primary mr-2">✓</span>
+                    <span>Fast quiz creation with AI assistance</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-primary mr-2">✓</span>
+                    <span>Diverse question types automatically generated</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-primary mr-2">✓</span>
+                    <span>Review and edit questions before finalizing</span>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card 
+              className={`cursor-pointer transition-all hover:border-primary ${creationMethod === "manual" ? "border-primary border-2" : ""}`}
+              onClick={() => setCreationMethod("manual")}
+            >
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Pencil className="h-5 w-5 mr-2 text-primary" />
+                  Manual Quiz Creation
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground mb-4">
+                  Create quiz questions manually with complete control over each question and answer option.
+                </p>
+                <ul className="space-y-2">
+                  <li className="flex items-start">
+                    <span className="text-primary mr-2">✓</span>
+                    <span>Full control over question content and structure</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-primary mr-2">✓</span>
+                    <span>Create custom question formats</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-primary mr-2">✓</span>
+                    <span>Perfect for specialized or technical assessments</span>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {/* Step 1: Test Details */}
         {step === 1 && (
           <div className="space-y-6">
@@ -330,24 +450,53 @@ const CreateTest = () => {
                     </div>
                   </RadioGroup>
                 </div>
+
+                {/* New proctoring option */}
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="enableProctoring" 
+                      checked={testDetails.enableProctoring}
+                      onCheckedChange={(checked) => 
+                        handleToggleChange("enableProctoring", checked === true)
+                      }
+                    />
+                    <div className="grid gap-1.5">
+                      <Label htmlFor="enableProctoring">Enable AI-powered proctoring</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Monitor candidates during the test with camera and screen tracking to prevent cheating
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>
         )}
         
-        {/* Step 2: Add Questions */}
-        {step === 2 && (
+        {/* Step 2: AI Question Generation (for AI method only) */}
+        {step === 2 && creationMethod === "ai" && (
+          <div className="space-y-6">
+            <AIQuizGenerator 
+              testDetails={testDetails}
+              onQuestionsGenerated={handleAddAIQuestions}
+            />
+          </div>
+        )}
+        
+        {/* Step 2/3: Add/Review Questions */}
+        {((step === 2 && creationMethod === "manual") || (step === 3 && creationMethod === "ai")) && (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold">
-                Questions ({questions.length}/{testDetails.questionCount})
+                {creationMethod === "ai" ? "Review Questions" : "Questions"} ({questions.length}/{testDetails.questionCount})
               </h2>
               <Button 
                 onClick={addQuestion}
                 disabled={questions.length >= testDetails.questionCount}
               >
                 <Plus className="mr-2 h-4 w-4" />
-                Add Question
+                {creationMethod === "ai" ? "Add Question" : "Add Question"}
               </Button>
             </div>
             
@@ -359,7 +508,10 @@ const CreateTest = () => {
                   </div>
                   <h3 className="text-lg font-medium mb-2">No questions added yet</h3>
                   <p className="text-muted-foreground mb-4 max-w-md">
-                    Start adding questions to create your test. You can add up to {testDetails.questionCount} questions.
+                    {creationMethod === "ai" 
+                      ? "Generate questions using AI or add them manually."
+                      : "Start adding questions to create your test."} 
+                    You can add up to {testDetails.questionCount} questions.
                   </p>
                   <Button onClick={addQuestion}>
                     <Plus className="mr-2 h-4 w-4" />
@@ -509,8 +661,8 @@ const CreateTest = () => {
           </div>
         )}
         
-        {/* Step 3: Review and Assign */}
-        {step === 3 && (
+        {/* Step 3/4: Review and Assign */}
+        {((step === 3 && creationMethod === "manual") || (step === 4 && creationMethod === "ai")) && (
           <div className="space-y-6">
             <Card>
               <CardContent className="pt-6 space-y-6">
@@ -546,6 +698,20 @@ const CreateTest = () => {
                       <p className="text-muted-foreground">Access Type</p>
                       <p className="font-medium">
                         {testDetails.accessType === "invited" ? "Invitation only" : "Public link"}
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <p className="text-muted-foreground">Proctoring</p>
+                      <p className="font-medium">
+                        {testDetails.enableProctoring ? "AI-Powered Proctoring Enabled" : "No Proctoring"}
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <p className="text-muted-foreground">Creation Method</p>
+                      <p className="font-medium">
+                        {creationMethod === "ai" ? "AI-Generated" : "Manual Creation"}
                       </p>
                     </div>
                   </div>
@@ -586,6 +752,23 @@ const CreateTest = () => {
                     </div>
                   )}
                 </div>
+
+                {testDetails.enableProctoring && (
+                  <div className="border rounded-lg p-4 bg-primary/5">
+                    <div className="flex items-start gap-4">
+                      <div className="bg-primary/10 p-2 rounded-full">
+                        <Clock className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="space-y-1">
+                        <h3 className="font-medium">AI-Powered Proctoring Enabled</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Candidates will be monitored via camera and screen tracking during the test.
+                          AI will detect suspicious activities and flag them for review.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -596,7 +779,7 @@ const CreateTest = () => {
           <Button 
             variant="outline"
             onClick={handlePreviousStep}
-            disabled={step === 1}
+            disabled={step === 0}
           >
             <ChevronLeft className="mr-2 h-4 w-4" />
             Previous
@@ -604,9 +787,9 @@ const CreateTest = () => {
           
           <Button 
             onClick={handleNextStep}
-            disabled={step === 2 && questions.length === 0}
+            disabled={(step === (creationMethod === "ai" ? 3 : 2)) && questions.length === 0}
           >
-            {step < 3 ? (
+            {step < (creationMethod === "ai" ? 4 : 3) ? (
               <>
                 Next
                 <ChevronRight className="ml-2 h-4 w-4" />

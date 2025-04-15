@@ -1,17 +1,20 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Navbar } from "./Navbar";
 import { Footer } from "./Footer";
 import { Sidebar } from "./Sidebar";
 import { useAuth } from "@/contexts/AuthContext";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { ProctoringScreen } from "@/components/proctoring/ProctoringScreen";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
   requireAuth?: boolean;
   allowedRole?: "hr" | "candidate" | null;
   showSidebar?: boolean;
+  enableProctoring?: boolean;
+  testTimeMinutes?: number;
 }
 
 export function DashboardLayout({
@@ -19,9 +22,13 @@ export function DashboardLayout({
   requireAuth = true,
   allowedRole = null,
   showSidebar = true,
+  enableProctoring = false,
+  testTimeMinutes = 30
 }: DashboardLayoutProps) {
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [shouldShowProctoring, setShouldShowProctoring] = useState(false);
 
   useEffect(() => {
     // If the user is not authenticated and authentication is required
@@ -34,7 +41,22 @@ export function DashboardLayout({
     if (requireAuth && isAuthenticated && allowedRole && user?.role !== allowedRole) {
       navigate(user?.role === "hr" ? "/hr/dashboard" : "/candidate/dashboard");
     }
-  }, [requireAuth, isAuthenticated, allowedRole, user, navigate]);
+
+    // Determine if we should show proctoring
+    // Only show proctoring if explicitly enabled AND on a test-taking related page
+    if (enableProctoring && isAuthenticated && user?.role === "candidate") {
+      const testRelatedPages = ['/candidate/take-test', '/candidate/start-test'];
+      const isTestRelatedPage = testRelatedPages.some(path => location.pathname.includes(path));
+      setShouldShowProctoring(isTestRelatedPage);
+    } else {
+      setShouldShowProctoring(false);
+    }
+  }, [requireAuth, isAuthenticated, allowedRole, user, navigate, enableProctoring, location.pathname]);
+
+  const handleProctoringViolation = (violationType: string) => {
+    console.log(`Proctoring violation detected: ${violationType}`);
+    // In a real application, you would log this violation to your backend
+  };
 
   // Early return for immediate redirect
   if (requireAuth && !isAuthenticated) {
@@ -58,6 +80,14 @@ export function DashboardLayout({
         </main>
       </div>
       <Footer className={cn(showSidebar ? "lg:ml-64" : "")} />
+      
+      {/* Proctoring component */}
+      {shouldShowProctoring && (
+        <ProctoringScreen 
+          onViolation={handleProctoringViolation} 
+          testTimeMinutes={testTimeMinutes}
+        />
+      )}
     </div>
   );
 }
