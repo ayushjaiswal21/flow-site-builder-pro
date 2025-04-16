@@ -1,4 +1,3 @@
-
 import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { 
@@ -38,7 +37,7 @@ export function Sidebar({ userRole, className }: SidebarProps) {
     },
     {
       name: "Monitor Tests",
-      path: "/hr/monitor",
+      path: "/hr/monitor-tests",
       icon: MonitorPlay,
     },
     {
