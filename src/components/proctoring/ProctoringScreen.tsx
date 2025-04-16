@@ -11,7 +11,8 @@ import {
   AlertTriangle,
   Check,
   X,
-  Monitor
+  Monitor,
+  MoveHorizontal
 } from "lucide-react";
 
 interface ProctoringScreenProps {
@@ -26,6 +27,7 @@ export function ProctoringScreen({ onViolation, testTimeMinutes = 30 }: Proctori
   const [violations, setViolations] = useState<string[]>([]);
   const [timeRemaining, setTimeRemaining] = useState(testTimeMinutes * 60); // in seconds
   const [focusEvents, setFocusEvents] = useState(0);
+  const [position, setPosition] = useState<'right' | 'left'>('right');
   
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -167,9 +169,14 @@ export function ProctoringScreen({ onViolation, testTimeMinutes = 30 }: Proctori
     
     return () => clearInterval(interval);
   }, [violations, onViolation]);
+
+  // Toggle position between left and right
+  const togglePosition = () => {
+    setPosition(prev => prev === 'right' ? 'left' : 'right');
+  };
   
   return (
-    <div className="fixed bottom-4 right-4 z-50">
+    <div className={`fixed top-24 ${position === 'right' ? 'right-4' : 'left-4'} z-50`}>
       <Card className="w-64 shadow-lg">
         <CardHeader className="pb-2">
           <div className="flex justify-between items-center">
@@ -177,9 +184,20 @@ export function ProctoringScreen({ onViolation, testTimeMinutes = 30 }: Proctori
               <Monitor className="h-4 w-4 mr-1" />
               Proctoring Active
             </CardTitle>
-            <Badge variant={violations.length > 0 ? "destructive" : "outline"}>
-              {violations.length} {violations.length === 1 ? "Alert" : "Alerts"}
-            </Badge>
+            <div className="flex items-center gap-1">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-6 w-6" 
+                onClick={togglePosition} 
+                title="Move window"
+              >
+                <MoveHorizontal className="h-3 w-3" />
+              </Button>
+              <Badge variant={violations.length > 0 ? "destructive" : "outline"}>
+                {violations.length} {violations.length === 1 ? "Alert" : "Alerts"}
+              </Badge>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-3 p-3">
