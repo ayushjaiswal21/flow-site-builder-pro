@@ -37,16 +37,31 @@ export function Navbar({ className }: NavbarProps) {
                     <DropdownMenuContent align="start" className="w-48">
                       <DropdownMenuItem onClick={() => navigate("/hr/dashboard")}>Dashboard</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => navigate("/hr/create-test")}>Create Test</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate("/hr/monitor")}>Monitor Tests</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/hr/monitor-tests")}>Monitor Tests</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                   
-                  <a href="/hr/reports" className="text-muted-foreground hover:text-foreground">Reports</a>
+                  <span 
+                    className="text-muted-foreground hover:text-foreground cursor-pointer"
+                    onClick={() => navigate("/hr/reports")}
+                  >
+                    Reports
+                  </span>
                 </>
               ) : (
                 <>
-                  <a href="/candidate/dashboard" className="text-muted-foreground hover:text-foreground">Dashboard</a>
-                  <a href="/candidate/results" className="text-muted-foreground hover:text-foreground">Results</a>
+                  <span 
+                    className="text-muted-foreground hover:text-foreground cursor-pointer"
+                    onClick={() => navigate("/candidate/dashboard")}
+                  >
+                    Dashboard
+                  </span>
+                  <span 
+                    className="text-muted-foreground hover:text-foreground cursor-pointer"
+                    onClick={() => navigate("/candidate/results")}
+                  >
+                    Results
+                  </span>
                 </>
               )}
               <a href="#resources" className="text-muted-foreground hover:text-foreground">Resources</a>
